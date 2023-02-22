@@ -27,8 +27,6 @@ export const Dashboard = () => {
 		};
 	}, [getData]);
 
-	console.log(user);
-
 	return (
 		<div className='dashboard__container'>
 			<div className='mobileScreenContainer'>
@@ -54,7 +52,7 @@ export const Dashboard = () => {
 						</article>
 						<article>
 							<h3>Interests :</h3>
-							<p className='border'>{user?.interest}</p>
+							<p className='border'>{user?.interest[0]}</p>
 						</article>
 						<article>
 							<h3>Email :</h3>

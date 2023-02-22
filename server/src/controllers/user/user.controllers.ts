@@ -23,7 +23,6 @@ export const createUser = async (req: Request, res: Response) => {
   const {email, name, password, phone, interest} = req.body;
   try {
     const findUser = await User.find({$or: [{email}, {phone}]});
-    // console.log(findUser, typeof findUser, findUser.length);
     if (findUser.length !== 0)
       return res
         .status(HTTP_STATUS_CODE.FORBIDDEN)

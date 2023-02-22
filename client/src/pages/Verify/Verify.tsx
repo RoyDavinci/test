@@ -1,7 +1,7 @@
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import React, { BaseSyntheticEvent, useState } from "react";
 import { Aside, DashboardHeader } from "../../components";
-import { UserInterface } from "../../interfaces/login";
+import { payloadErrorResponse, UserInterface } from "../../interfaces/login";
 import "./verify.css";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -45,10 +45,12 @@ export const Verify = () => {
 				if (response.success) {
 					toast("Verification Link Sent, Please Check Mail");
 					setDetail({ email: "", phone: "" });
+				} else {
+					toast(response.message);
 				}
-				console.log(data);
 			} catch (error) {
-				console.log(error);
+				const err = error as AxiosError<payloadErrorResponse>;
+				toast(err.response?.data.message);
 			}
 		}
 		if (showPhone) {
@@ -61,9 +63,12 @@ export const Verify = () => {
 				if (response.success) {
 					toast("Please check Phone For Otp");
 					setDetail({ email: "", phone: "" });
+				} else {
+					toast(response.message);
 				}
 			} catch (error) {
-				console.log(error);
+				const err = error as AxiosError<payloadErrorResponse>;
+				toast(err.response?.data.message);
 			}
 		}
 	};

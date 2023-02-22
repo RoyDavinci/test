@@ -17,7 +17,6 @@ export const Email = () => {
 		const getVerification = async () => {
 			const token = searchParams.get("token");
 			if (token) {
-				console.log(token);
 				try {
 					const data = await fetch(
 						"http://localhost:3650/api/v1/user/verify-email-token",
@@ -32,10 +31,7 @@ export const Email = () => {
 						localStorage.setItem("user", JSON.stringify(response.user));
 						navigate("/");
 					}
-					console.log(response);
-				} catch (error) {
-					console.log(error);
-				}
+				} catch (error) {}
 			}
 		};
 		getVerification();

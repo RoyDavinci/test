@@ -29,7 +29,6 @@ export const Create = () => {
 			phone: initial.phone,
 			interests: initial.interest.split(","),
 		};
-		console.log(items);
 		try {
 			const { data } = await axios.post(
 				"http://localhost:3650/api/v1/user/create",
@@ -56,9 +55,7 @@ export const Create = () => {
 				interest: "",
 			});
 			setError(response.message);
-			console.log(data);
 		} catch (error) {
-			console.log(error);
 			const err = error as AxiosError<payloadErrorResponse>;
 			setError(err.response?.data.message);
 		}

@@ -5,7 +5,7 @@ export interface User {
 	id: string;
 	email: string;
 	phone: string;
-	interest: string;
+	interest: [string];
 	name: string;
 	avatar: string;
 	isVerified: boolean;

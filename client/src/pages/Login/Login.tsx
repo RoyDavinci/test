@@ -26,7 +26,7 @@ export const Login = () => {
 				}
 			);
 			const response = data as unknown as UserInterface;
-			console.log(response);
+
 			if (response.success) {
 				localStorage.setItem("user", JSON.stringify(response.user));
 				localStorage.setItem("token", response.token);

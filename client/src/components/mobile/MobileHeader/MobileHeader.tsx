@@ -54,8 +54,8 @@ export const MobileHeader = () => {
 						</button>
 					</div>
 				</div>
-				<div>{icon && <Aside />}</div>
 			</nav>
+			<div className='w-56 absolute left-0'>{icon && <Aside />}</div>
 		</div>
 	);
 };

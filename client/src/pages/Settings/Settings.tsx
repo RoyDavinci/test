@@ -182,7 +182,7 @@ export const Settings = () => {
 			<div className='bigScreenContainer'>
 				<ToastContainer />
 				<DashboardHeader />
-				<section className='dashboard__SectionCenter px-4'>
+				<section className='dashboard__SectionCenter'>
 					<Aside />
 					<div>
 						<h1>Profile</h1>

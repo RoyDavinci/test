@@ -14,8 +14,8 @@ export const Aside = () => {
 
 	return (
 		<div>
-			<aside className='absolute  left-0 w-64 h-full' aria-label='Sidenav'>
-				<div className='overflow-y-auto py-5 px-3 h-full bg-white border-r border-gray-200 dark:bg-gray-800 dark:border-gray-700'>
+			<aside className='h-full' aria-label='Sidenav'>
+				<div className='overflow-y-auto py-5 px-3 h-screen bg-white border-r border-gray-200 dark:bg-gray-800 dark:border-gray-700'>
 					<ul className='space-y-2'>
 						<li>
 							<Link
