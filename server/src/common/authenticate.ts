@@ -48,12 +48,12 @@ export const authenticateJWT = async (
   res: Response,
   next: NextFunction,
 ) => {
-  if (!req.headers.authorization)
-    return next({
-      statusCode: STATUS_CODES.PROXY_AUTHENTICATION_REQUIRED,
-      message: 'header token needed',
-    });
-
+  if (!req.headers.authorization) {
+    logger.info('no header token', req.headers);
+    return res
+      .status(STATUS_CODES.PROXY_AUTHENTICATION_REQUIRED)
+      .json({message: 'header token needed'});
+  }
   return passport.authenticate('jwt', (error: Error, user: Express.User) => {
     if (error) {
       return res

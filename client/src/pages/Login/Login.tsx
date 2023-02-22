@@ -2,7 +2,7 @@ import React, { BaseSyntheticEvent, ChangeEvent, useState } from "react";
 import "./login.css";
 import { Link, useNavigate } from "react-router-dom";
 import axios, { AxiosError } from "axios";
-import { LoginInterface, payloadErrorResponse } from "../../interfaces/login";
+import { UserInterface, payloadErrorResponse } from "../../interfaces/login";
 export const Login = () => {
 	const [userDetail, setUserDetail] = useState({ username: "", password: "" });
 	const [error, setError] = useState<string>();
@@ -25,7 +25,7 @@ export const Login = () => {
 					userpassword: userDetail.password,
 				}
 			);
-			const response = data as unknown as LoginInterface;
+			const response = data as unknown as UserInterface;
 			console.log(response);
 			if (response.success) {
 				localStorage.setItem("user", JSON.stringify(response.user));
@@ -44,7 +44,7 @@ export const Login = () => {
 	return (
 		<div>
 			<section className='bg-gray-50 dark:bg-gray-900'>
-				<div className='flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0'>
+				<div className='flex flex-col items-center justify-center px-6 py-8 mx-auto h-screen lg:py-0'>
 					<Link
 						to='#'
 						className='flex items-center mb-6 text-2xl font-semibold text-gray-900 dark:text-white'
@@ -106,6 +106,7 @@ export const Login = () => {
 										placeholder='••••••••'
 										className='bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-[#2463EB] focus:border-[#2463EB] block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500'
 										required={true}
+										autoComplete='new-password'
 									/>
 								</div>
 								<div className='flex items-center justify-between'>
@@ -144,7 +145,7 @@ export const Login = () => {
 								<p className='text-sm font-light text-gray-500 dark:text-gray-400'>
 									Don't have an account yet?{" "}
 									<Link
-										to='#'
+										to='/signup'
 										className='font-medium text-[#2463EB] hover:underline dark:text-primary-500'
 									>
 										Sign up

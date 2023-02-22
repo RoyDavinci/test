@@ -15,7 +15,7 @@ const options = {
 export const passportService = (passport: PassportStatic) => {
   passport.use(
     new passportJwt.Strategy(options, async (payload, done) => {
-      const user = await User.findById({_id: payload._id});
+      const user = await User.findById({_id: payload.id});
       if (!user) return done(null, false, {message: 'user does not exist'});
 
       return done(null, user, {message: 'user authenticated'});

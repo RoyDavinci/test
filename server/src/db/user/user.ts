@@ -7,7 +7,7 @@ export interface IUser extends Document {
   avatar?: string;
   phone: string;
   password: string;
-  interest: string;
+  interest: string[];
   isVerified: boolean;
   otp: number;
 }
@@ -15,11 +15,15 @@ export interface IUser extends Document {
 const userSchema = new mongoose.Schema<IUser>(
   {
     name: {type: String},
-    avatar: {type: String},
+    avatar: {
+      type: String,
+      default:
+        'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png',
+    },
     email: {type: String, required: true, unique: true},
     phone: {type: String, required: true, unique: true},
     password: {type: String, required: true},
-    interest: {type: String, required: true, default: 'Music'},
+    interest: {type: [String], required: true, default: ['Music']},
     isVerified: {type: Boolean, default: false},
     otp: {type: Number},
   },

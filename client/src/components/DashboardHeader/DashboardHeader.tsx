@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { defaultLogo } from "../../images";
 
 export interface User {
 	id: string;
@@ -23,8 +22,6 @@ export const DashboardHeader = () => {
 			setImage(userData.avatar);
 		}
 	}, []);
-
-	console.log(image);
 
 	return (
 		<header>
@@ -128,7 +125,11 @@ export const DashboardHeader = () => {
 							<span className='sr-only'>Open user menu</span>
 							<img
 								className='w-8 h-8 rounded-full'
-								src={image ? image : defaultLogo}
+								src={
+									image
+										? image
+										: "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"
+								}
 								alt='user '
 							/>
 						</button>

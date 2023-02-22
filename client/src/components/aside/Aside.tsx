@@ -1,8 +1,17 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { BaseSyntheticEvent } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import "./aside.css";
 
 export const Aside = () => {
+	const navigate = useNavigate();
+
+	const onClick = (e: BaseSyntheticEvent) => {
+		e.preventDefault();
+		localStorage.removeItem("user");
+		localStorage.removeItem("token");
+		navigate("/login");
+	};
+
 	return (
 		<div>
 			<aside className='absolute  left-0 w-64 h-full' aria-label='Sidenav'>
@@ -10,7 +19,7 @@ export const Aside = () => {
 					<ul className='space-y-2'>
 						<li>
 							<Link
-								to='#'
+								to='/'
 								className='flex items-center p-2 text-base font-normal text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group'
 							>
 								<svg
@@ -119,7 +128,7 @@ export const Aside = () => {
 						</li>
 						<li>
 							<Link
-								to='#'
+								to='/settings'
 								className='flex items-center p-2 text-base font-normal text-gray-900 rounded-lg transition duration-75 hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-white group'
 							>
 								<svg
@@ -137,6 +146,15 @@ export const Aside = () => {
 								</svg>
 								<span className='ml-3'>Settings & Privacy</span>
 							</Link>
+						</li>
+						<li>
+							<button
+								onClick={onClick}
+								className='flex items-center p-2 text-base font-normal text-gray-900 rounded-lg transition duration-75 hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-white group'
+							>
+								<i className='fa-solid fa-power-off lex-shrink-0 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white items-center justify-center'></i>
+								<span className='ml-3'>Logout</span>
+							</button>
 						</li>
 					</ul>
 				</div>

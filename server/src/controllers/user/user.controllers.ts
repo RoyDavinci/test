@@ -5,6 +5,7 @@ import {Request, Response} from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import axios from 'axios';
+import {UploadApiErrorResponse, UploadApiResponse} from 'cloudinary';
 import HTTP_STATUS_CODE from '../../constants/httpCodes';
 import User from '../../db/user/user';
 import {logger} from '../../utils/logger';
@@ -16,6 +17,7 @@ import {generateOtp} from '../../common/generateNumber';
 import {PowerSmpp} from './user.interface';
 import {forgotPasswordLink} from '../../common/forgotPasswordLinkHtml';
 import {forgotPasswordHTML} from '../../common/forgotPasswordHtml';
+import {streamUpload} from '../../utils/streamifier';
 
 export const createUser = async (req: Request, res: Response) => {
   const {email, name, password, phone, interest} = req.body;
@@ -34,6 +36,11 @@ export const createUser = async (req: Request, res: Response) => {
       password: hashedPassword,
       interest,
     });
+    const token = jwt.sign(
+      {id: createNewUser._id, email: createNewUser.email},
+      config.server.secret,
+      {expiresIn: '3h'},
+    );
 
     return createNewUser.save((err, result) => {
       if (err)
@@ -41,9 +48,19 @@ export const createUser = async (req: Request, res: Response) => {
           .status(HTTP_STATUS_CODE.BAD_REQUEST)
           .json({message: 'an error occured', err});
 
-      return res
-        .status(HTTP_STATUS_CODE.CREATED)
-        .json({message: 'user created', result});
+      return res.status(HTTP_STATUS_CODE.CREATED).json({
+        message: 'user created',
+        user: {
+          id: result._id,
+          email: result.email,
+          phone: result.phone,
+          interest: result.interest,
+          name: result.name,
+          avatar: result.avatar,
+          isVerified: result.isVerified,
+        },
+        token,
+      });
     });
   } catch (error) {
     logger.info(error);
@@ -59,11 +76,11 @@ export const verifyByMail = async (req: Request, res: Response) => {
 
   try {
     const findUser = await User.findOne({email});
-    if (!findUser) return res.status(400).json({message: 'user not found'});
+    if (!findUser)
+      return res.status(400).json({message: 'user not found', success: false});
     const token = jwt.sign(
       {id: findUser._id, email: findUser.email},
       config.server.secret,
-      {expiresIn: '3h'},
     );
     try {
       await sendEmail(
@@ -76,16 +93,53 @@ export const verifyByMail = async (req: Request, res: Response) => {
 
       return res
         .status(HTTP_STATUS_CODE.BAD_REQUEST)
-        .json({message: 'an error occured', error});
+        .json({message: 'an error occured', error, success: false});
     }
 
-    return res.status(200).json({message: 'email sent'});
+    return res.status(200).json({message: 'email sent', success: true});
   } catch (error) {
     logger.info(error);
 
     return res
       .status(HTTP_STATUS_CODE.BAD_REQUEST)
-      .json({message: 'an error occured', error});
+      .json({message: 'an error occured', error, success: false});
+  }
+};
+
+export const verifyEmailToken = async (req: Request, res: Response) => {
+  try {
+    if (!req.user)
+      return res.status(400).json({message: 'user not authenticated'});
+    const {email} = req.user;
+    const findUser = await User.findOne({email});
+    if (!findUser)
+      return res.status(400).json({message: 'user not found', success: false});
+    findUser.isVerified = true;
+    return findUser.save((err, data) => {
+      if (err)
+        return res
+          .status(400)
+          .json({message: 'an error occured', err, success: false});
+      return res.status(200).json({
+        message: 'user verified',
+        user: {
+          id: data._id,
+          email: data.email,
+          phone: data.phone,
+          interest: data.interest,
+          name: data.name,
+          avatar: data.avatar,
+          isVerified: data.isVerified,
+        },
+        success: true,
+      });
+    });
+  } catch (error) {
+    logger.info(error);
+
+    return res
+      .status(HTTP_STATUS_CODE.BAD_REQUEST)
+      .json({message: 'an error occured', error, success: false});
   }
 };
 
@@ -95,7 +149,9 @@ export const verifyBySms = async (req: Request, res: Response) => {
   try {
     const findUser = await User.findOne({phone});
     if (!findUser)
-      return res.status(400).json({message: 'incorrect phone number'});
+      return res
+        .status(400)
+        .json({message: 'incorrect phone number', success: false});
     const otp = generateOtp();
     const {data} = await axios.get(
       `http://sms.approot.ng/api/v2/SendBulkSms?ApiKey=${config.sms.SMS_API_KEY}&ClientId=${config.sms.SMS_CLIENT_ID}&SenderId=${config.sms.SMS_SENDER_ID}&MobileNumber_Message=${phone}^${otp}`,
@@ -106,9 +162,13 @@ export const verifyBySms = async (req: Request, res: Response) => {
       findUser.otp = otp;
       return findUser.save((err, result) => {
         if (err)
-          return res.status(400).json({message: 'an error occured', err});
+          return res
+            .status(400)
+            .json({message: 'an error occured', err, success: false});
 
-        return res.status(200).json({message: 'otp updated', result});
+        return res
+          .status(200)
+          .json({message: 'otp updated', result, success: true});
       });
     }
 
@@ -118,7 +178,7 @@ export const verifyBySms = async (req: Request, res: Response) => {
 
     return res
       .status(HTTP_STATUS_CODE.BAD_REQUEST)
-      .json({message: 'an error occured', error});
+      .json({message: 'an error occured', error, success: false});
   }
 };
 
@@ -128,21 +188,37 @@ export const verifyOtp = async (req: Request, res: Response) => {
 
   try {
     const findUser = await User.findById(id);
-    if (!findUser) return res.status(400).json({message: 'user not found'});
+    if (!findUser)
+      return res.status(400).json({message: 'user not found', success: false});
     if (Number(otp) !== findUser.otp)
       return res
         .status(400)
         .json({message: 'please input correct otp sent to you'});
     findUser.isVerified = true;
     return findUser.save((err, data) => {
-      if (err) return res.status(400).json({message: 'an error occured', err});
-      return res.status(200).json({message: 'user verified', data});
+      if (err)
+        return res
+          .status(400)
+          .json({message: 'an error occured', err, success: false});
+      return res.status(200).json({
+        message: 'user verified',
+        user: {
+          id: data._id,
+          email: data.email,
+          phone: data.phone,
+          interest: data.interest,
+          name: data.name,
+          avatar: data.avatar,
+          isVerified: data.isVerified,
+        },
+        success: true,
+      });
     });
   } catch (error) {
     logger.info(error);
     return res
       .status(HTTP_STATUS_CODE.BAD_REQUEST)
-      .json({message: 'an error occured', error});
+      .json({message: 'an error occured', error, success: false});
   }
 };
 
@@ -249,5 +325,117 @@ export const logout = async (req: Request, res: Response) => {
     return res
       .status(HTTP_STATUS_CODE.BAD_REQUEST)
       .json({message: 'an error occured', error});
+  }
+};
+
+export const updateUser = async (req: Request, res: Response) => {
+  const {email, password, name} = req.body;
+  const {id} = req.params;
+
+  try {
+    const findUser = await User.findById(id);
+    logger.info('passed here');
+    if (!findUser)
+      return res.status(400).json({message: 'user not found', success: false});
+    if (password) {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      if (req.file) {
+        const result = (await streamUpload(req.file.buffer)) as unknown as
+          | UploadApiResponse
+          | UploadApiErrorResponse;
+        if (result.message)
+          return res.status(result.http_code).json({
+            message: 'error using cloudinary upload',
+            error: result.message,
+            success: false,
+          });
+        const user = await User.findByIdAndUpdate(
+          id,
+          {avatar: result.secure_url, password: hashedPassword, name, email},
+          {new: true},
+        );
+        return res.status(200).json({
+          message: 'user updated',
+          user: {
+            id: user?._id,
+            email: user?.email,
+            phone: user?.phone,
+            interest: user?.interest,
+            name: user?.name,
+            avatar: user?.avatar,
+            isVerified: user?.isVerified,
+          },
+          success: true,
+        });
+      }
+    }
+    if (req.file) {
+      const result = (await streamUpload(req.file.buffer)) as unknown as
+        | UploadApiResponse
+        | UploadApiErrorResponse;
+      if (result.message)
+        return res.status(result.http_code).json({
+          message: 'error using cloudinary upload',
+          error: result.message,
+          success: false,
+        });
+      const user = await User.findByIdAndUpdate(
+        id,
+        {avatar: result.secure_url, name, email},
+        {new: true},
+      );
+      return res.status(200).json({
+        message: 'user updated',
+        user: {
+          id: user?._id,
+          email: user?.email,
+          phone: user?.phone,
+          interest: user?.interest,
+          name: user?.name,
+          avatar: user?.avatar,
+          isVerified: user?.isVerified,
+        },
+        success: true,
+      });
+    }
+    const user = await User.findByIdAndUpdate(id, {name, email}, {new: true});
+    return res.status(200).json({
+      message: 'user updated',
+      user: {
+        id: user?._id,
+        email: user?.email,
+        phone: user?.phone,
+        interest: user?.interest,
+        name: user?.name,
+        avatar: user?.avatar,
+        isVerified: user?.isVerified,
+      },
+      success: true,
+    });
+  } catch (error) {
+    logger.info(error);
+    return res
+      .status(HTTP_STATUS_CODE.BAD_REQUEST)
+      .json({message: 'an error occured', error, success: false});
+  }
+};
+
+export const updatePassword = async (req: Request, res: Response) => {
+  const {email, password} = req.body;
+
+  try {
+    const findUser = await User.findOne({email});
+    if (!findUser) return res.status(400).json({message: 'user not found'});
+    const hashedPassword = await bcrypt.hash(password, 10);
+    findUser.password = hashedPassword;
+    return findUser.save((err, data) => {
+      if (err) return res.status(400).json({err});
+      return res.status(200).json({data});
+    });
+  } catch (error) {
+    logger.info(error);
+    return res
+      .status(HTTP_STATUS_CODE.BAD_REQUEST)
+      .json({message: 'an error occured', error, success: false});
   }
 };

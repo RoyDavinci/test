@@ -1,0 +1,48 @@
+.dashboard__SectionCenter__btnContainer {
+	text-align: center;
+}
+.dashboard__SectionCenter__btnContainer button {
+	padding: 10px;
+	margin: 20px 10px;
+	border-radius: 5px;
+	color: white;
+}
+.dashboard__SectionCenter__divItemsContainer {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	flex-direction: column;
+	min-height: 80vh;
+	text-align: center;
+}
+
+.dashboard__SectionCenter__divItemsContainer form div input {
+	border: 1px solid #ccc;
+	display: block;
+	width: 100%;
+	margin: 10px 0px;
+	padding: 5px 10px;
+}
+.dashboard__SectionCenter__divItemsContainer form div button {
+	padding: 10px;
+	margin: 20px 0px;
+	border-radius: 5px;
+	color: white;
+}
+
+@media (max-width: 899px) {
+	.bigScreenContainer {
+		display: none;
+	}
+	.mobileScreenContainer {
+		display: block;
+	}
+}
+@media (min-width: 900px) {
+	.bigScreenContainer {
+		display: block;
+	}
+	.mobileScreenContainer {
+		display: none;
+	}
+}
