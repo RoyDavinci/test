@@ -52,7 +52,15 @@ export const Dashboard = () => {
 						</article>
 						<article>
 							<h3>Interests :</h3>
-							<p className='border'>{user?.interest[0]}</p>
+							<p className='border'>
+								{user?.interest.map((item, index) => {
+									return (
+										<span key={index}>
+											{item} {user.interest.length > 1 && <span>,</span>}
+										</span>
+									);
+								})}
+							</p>
 						</article>
 						<article>
 							<h3>Email :</h3>
@@ -101,7 +109,11 @@ export const Dashboard = () => {
 							</article>
 							<article>
 								<h3>Interests :</h3>
-								<p className='border'>{user?.interest}</p>
+								<p className='border'>
+									{user?.interest.map((item, index) => {
+										return <span key={index}>{item}, </span>;
+									})}
+								</p>
 							</article>
 							<article>
 								<h3>Email :</h3>

@@ -1,6 +1,6 @@
 import axios, { AxiosError } from "axios";
 import React, { BaseSyntheticEvent, ChangeEvent, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { payloadErrorResponse, UserInterface } from "../../interfaces/login";
 
 export const Create = () => {
@@ -29,6 +29,7 @@ export const Create = () => {
 			phone: initial.phone,
 			interests: initial.interest.split(","),
 		};
+		console.log(items);
 		try {
 			const { data } = await axios.post(
 				"http://localhost:3650/api/v1/user/create",
@@ -62,7 +63,7 @@ export const Create = () => {
 	};
 
 	return (
-		<section className='bg-white dark:bg-gray-900 lg:h-screen'>
+		<section className='bg-white dark:bg-gray-900 md:h-screen'>
 			<div className='py-8 px-4 mx-auto max-w-2xl lg:py-16'>
 				<h2 className='mb-4 text-xl font-bold text-gray-900 dark:text-white'>
 					Create Your Account
@@ -172,6 +173,12 @@ export const Create = () => {
 						Create Account
 					</button>
 				</form>
+				<div className='flex justify-between text-white my-4'>
+					<span>Already Have an Account?</span>
+					<Link to='/login' className='text-[#2463EB]'>
+						Sign In
+					</Link>
+				</div>
 			</div>
 		</section>
 	);

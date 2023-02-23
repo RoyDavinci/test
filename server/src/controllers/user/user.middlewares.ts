@@ -10,7 +10,7 @@ export const createNewUserValidation = [
   check('interest')
     .optional({checkFalsy: true})
     .bail()
-    .isString()
+    .isArray()
     .withMessage('interest must be string'),
   check('password')
     .notEmpty()

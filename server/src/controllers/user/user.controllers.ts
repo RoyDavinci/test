@@ -5,7 +5,6 @@ import {Request, Response} from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import axios from 'axios';
-import {UploadApiErrorResponse, UploadApiResponse} from 'cloudinary';
 import HTTP_STATUS_CODE from '../../constants/httpCodes';
 import User from '../../db/user/user';
 import {logger} from '../../utils/logger';
@@ -330,57 +329,54 @@ export const logout = async (req: Request, res: Response) => {
 export const updateUser = async (req: Request, res: Response) => {
   const {email, password, name} = req.body;
   const {id} = req.params;
+  logger.info('welcome');
 
   try {
+    logger.info('here');
     const findUser = await User.findById(id);
-    logger.info('passed here');
     if (!findUser)
       return res.status(400).json({message: 'user not found', success: false});
+    logger.info('yes user');
     if (password) {
       const hashedPassword = await bcrypt.hash(password, 10);
-      if (req.file) {
-        const result = (await streamUpload(req.file.buffer)) as unknown as
-          | UploadApiResponse
-          | UploadApiErrorResponse;
-        if (result.message)
-          return res.status(result.http_code).json({
-            message: 'error using cloudinary upload',
-            error: result.message,
-            success: false,
+      try {
+        if (req.file) {
+          const result = await streamUpload(req.file.buffer);
+          if (result.message)
+            return res.status(result.http_code).json({
+              message: 'error using cloudinary upload',
+              error: result.message,
+              success: false,
+            });
+          const user = await User.findByIdAndUpdate(
+            id,
+            {avatar: result.secure_url, password: hashedPassword, name, email},
+            {new: true},
+          );
+          return res.status(200).json({
+            message: 'user updated',
+            user: {
+              id: user?._id,
+              email: user?.email,
+              phone: user?.phone,
+              interest: user?.interest,
+              name: user?.name,
+              avatar: user?.avatar,
+              isVerified: user?.isVerified,
+            },
+            success: true,
           });
-        const user = await User.findByIdAndUpdate(
-          id,
-          {avatar: result.secure_url, password: hashedPassword, name, email},
-          {new: true},
-        );
-        return res.status(200).json({
-          message: 'user updated',
-          user: {
-            id: user?._id,
-            email: user?.email,
-            phone: user?.phone,
-            interest: user?.interest,
-            name: user?.name,
-            avatar: user?.avatar,
-            isVerified: user?.isVerified,
-          },
-          success: true,
-        });
+        }
+      } catch (error) {
+        logger.info(error);
+        return res
+          .status(HTTP_STATUS_CODE.BAD_REQUEST)
+          .json({message: 'an error occured', error, success: false});
       }
-    }
-    if (req.file) {
-      const result = (await streamUpload(req.file.buffer)) as unknown as
-        | UploadApiResponse
-        | UploadApiErrorResponse;
-      if (result.message)
-        return res.status(result.http_code).json({
-          message: 'error using cloudinary upload',
-          error: result.message,
-          success: false,
-        });
+      logger.info('password no file');
       const user = await User.findByIdAndUpdate(
         id,
-        {avatar: result.secure_url, name, email},
+        {password: hashedPassword, name, email},
         {new: true},
       );
       return res.status(200).json({
@@ -397,7 +393,44 @@ export const updateUser = async (req: Request, res: Response) => {
         success: true,
       });
     }
+    logger.info('no password');
+    if (req.file) {
+      logger.info('so file');
+      try {
+        const result = await streamUpload(req.file.buffer);
+        if (result.message)
+          return res.status(result.http_code).json({
+            message: 'error using cloudinary upload',
+            error: result.message,
+            success: false,
+          });
+        const user = await User.findByIdAndUpdate(
+          id,
+          {avatar: result.secure_url, name, email},
+          {new: true},
+        );
+        return res.status(200).json({
+          message: 'user updated',
+          user: {
+            id: user?._id,
+            email: user?.email,
+            phone: user?.phone,
+            interest: user?.interest,
+            name: user?.name,
+            avatar: user?.avatar,
+            isVerified: user?.isVerified,
+          },
+          success: true,
+        });
+      } catch (error) {
+        logger.info(error);
+        return res
+          .status(HTTP_STATUS_CODE.BAD_REQUEST)
+          .json({message: 'an error occured', error, success: false});
+      }
+    }
     const user = await User.findByIdAndUpdate(id, {name, email}, {new: true});
+    logger.info('yaay nothing');
     return res.status(200).json({
       message: 'user updated',
       user: {
@@ -432,7 +465,7 @@ export const updatePassword = async (req: Request, res: Response) => {
       return res.status(200).json({data});
     });
   } catch (error) {
-    logger.info(error);
+    logger.info('here', error);
     return res
       .status(HTTP_STATUS_CODE.BAD_REQUEST)
       .json({message: 'an error occured', error, success: false});

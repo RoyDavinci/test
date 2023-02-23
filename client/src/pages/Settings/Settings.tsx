@@ -71,6 +71,10 @@ export const Settings = () => {
 		typeof initial.image === "object" &&
 			formData.append("image", initial.image);
 
+		formData.forEach((item) => {
+			console.log(item);
+		});
+
 		try {
 			const { data } = await axios.patch(
 				`http://localhost:3650/api/v1/user/update-user/${initial.id}`,
